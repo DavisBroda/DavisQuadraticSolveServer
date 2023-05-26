@@ -37,17 +37,7 @@ object QuadraticAppImpl{
   private val route = path("quad") {
     get {
       parameters("str") { in =>
-        val response = for {
-          parsed <- StringParser.parseQuadratic(in)
-          solved <- QuadraticSolver.solve(parsed._1, parsed._2, parsed._3)
-        } yield {
-          if (solved.isEmpty) {
-            "quadratic had no real number solutions"
-          } else {
-            s"Quadratic had solutions ${solved.map(d => s"x = $d").mkString(", ")}"
-          }
-
-        }
+        val response = maybeSolveQuadratic(in)
 
         response match {
           case Left(e) =>
@@ -60,6 +50,39 @@ object QuadraticAppImpl{
       }
     }
 
+  }
+
+  private def maybeSolveQuadratic(in: String): Either[Exception,String] = {
+    for {
+      parsed <- StringParser.parseQuadratic(in)
+      solved <- QuadraticSolver.solve(parsed._1, parsed._2, parsed._3)
+    } yield {
+      if (solved.isEmpty) {
+        "quadratic had no real number solutions"
+      } else {
+        s"Quadratic had solutions ${solved.map(d => s"x = $d").mkString(", ")}"
+      }
+    }
+  }
+
+  /**
+   * API that can be accessed directly through code. For usage if this app is used as a library
+   * rather than a standalone app.
+   * <br><br>
+   * Accepts strings in the format [-]ax&#94;2[ +|- bx][ +|- c] = 0, and outputs all real number solutions, embedded
+   * into a String.
+   * <br><br>
+   * String formats: <br>
+   * 2 solutions: "Quadratic had solutions x = solution1, x = solution2"
+   * 1 solution: "Quadratic had solutions x = solution1"
+   * 0 solutions: "quadratic had no real number solutions"
+   * */
+  def solveQuadraticString(in: String): String = {
+    val res = maybeSolveQuadratic(in)
+    res match {
+      case Left(e) => e.getMessage
+      case Right(s) => s
+    }
   }
 
   def startServer(): Future[Http.ServerBinding] = {

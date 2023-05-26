@@ -35,8 +35,6 @@ class QuadraticAppTests extends AnyFlatSpec{
     assert(requestF.isCompleted)
     val res = requestF.value.get.get.entity.toStrict(Duration(3, TimeUnit.SECONDS)).map(_.data.utf8String).value.get.get
 
-    println(res)
-
     QuadraticAppImpl.stopServer(f)
 
     assert(res.contains("x = 2.0"))
